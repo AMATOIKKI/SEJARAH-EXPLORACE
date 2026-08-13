@@ -88,32 +88,49 @@
             background: #729656;
         }
 
+        /* AMBUSH CUTSCENE STYLING */
         #ambush-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(180, 0, 0, 0.85);
+            background: rgba(15, 0, 0, 0.95);
             display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 999;
             color: white;
-            animation: flash 0.2s infinite alternate;
+            text-align: center;
         }
 
-        @keyframes flash {
-            0% { background: rgba(180, 0, 0, 0.85); }
-            100% { background: rgba(80, 0, 0, 0.95); }
+        /* Animated Gun Flash Effect */
+        .gun-flash {
+            animation: flash-red 0.15s infinite alternate;
+        }
+
+        @keyframes flash-red {
+            0% { background: rgba(200, 0, 0, 0.95); }
+            100% { background: rgba(40, 0, 0, 0.95); }
+        }
+
+        /* Pixel Animated Soldier Fall */
+        #cutscene-canvas {
+            border: 3px solid #8b0000;
+            background-color: #111e0e;
+            margin-top: 15px;
+            box-shadow: 0 0 15px #ff0000;
         }
     </style>
 </head>
 <body>
 
+<!-- CUTSCENE OVERLAY -->
 <div id="ambush-overlay">
-    <h1 style="font-size: 3rem; text-shadow: 3px 3px #000;">SERANGAN HENDAP!</h1>
-    <p style="font-size: 1.5rem;">Jawapan Kurang Tepat. Sila Cuba Lagi!</p>
+    <h1 style="font-size: 2.2rem; color: #ff4d4d; text-shadow: 2px 2px #000; margin: 0;">SERANGAN HENDAP!</h1>
+    <p style="font-size: 1.1rem; color: #ffcccc; margin: 5px 0;">Tentera Tertembak! Sila Cuba Lagi.</p>
+    <canvas id="cutscene-canvas" width="480" height="200"></canvas>
 </div>
 
+<!-- GAME CONTAINER -->
 <div id="game-container">
     <div id="hud">
         <span>CHECKPOINT: <span id="cp-count">1</span>/10</span>
@@ -130,58 +147,17 @@
 </div>
 
 <script>
-    // 10 Sejarah Questions with keyword triggers
     const rawQuestions = [
-        { 
-            q: "Apakah matlamat utama Jepun melancarkan dasar peluasan kuasa di rantau Asia Pasifik pada awal abad ke-20?", 
-            target: "Memenuhi keperluan ekonomi",
-            keywords: ["ekonomi", "keperluan"] 
-        },
-        { 
-            q: "Mengapakah Amerika Syarikat mengenakan sekatan ekonomi terhadap Jepun sebelum tercetusnya Perang Dunia Kedua di Asia Pasifik?", 
-            target: "Pencerobohan Jepun ke atas China",
-            keywords: ["pencerobohan", "china", "serang china", "menceroboh"] 
-        },
-        { 
-            q: "Apakah kepentingan serangan Jepun ke atas Pearl Harbor pada Disember 1941?", 
-            target: "Melumpuhkan armada laut AS",
-            keywords: ["armada", "laut", "melumpuhkan", "tentera", "as", "amerika"] 
-        },
-        { 
-            q: "Jepun menggunakan slogan 'Asia untuk Orang Asia' semasa kempen peluasan kuasanya. Apakah tujuan penggunaan slogan tersebut?", 
-            target: "Menanam semangat antipenjajah Barat",
-            keywords: ["antipenjajah", "penjajah", "barat", "semangat"] 
-        },
-        { 
-            q: "Mengapakah Tanah Melayu menjadi sasaran utama dalam serangan Jepun di Asia Tenggara?", 
-            target: "Kekayaan sumber bahan mentah",
-            keywords: ["bahan mentah", "sumber", "mentah", "kekayaan"] 
-        },
-        { 
-            q: "Apakah peranan 'Orde Baru Asia' yang diperkenalkan oleh Jepun?", 
-            target: "Membentuk blok ekonomi Asia",
-            keywords: ["blok", "ekonomi"] 
-        },
-        { 
-            q: "Bagaimanakah kedudukan geografi Jepun mempengaruhi dasar peluasan kuasanya?", 
-            target: "Kekurangan sumber asli domestik",
-            keywords: ["kurang", "kekurangan", "sumber"] 
-        },
-        { 
-            q: "Apakah kesan kegagalan rundingan antara Jepun dengan Amerika Syarikat di Washington pada November 1941?", 
-            target: "Jepun melancarkan serangan mengejut",
-            keywords: ["serangan", "mengejut", "menyerang"] 
-        },
-        { 
-            q: "Apakah faktor yang menyumbang kepada kejayaan awal Jepun dalam menakluki Asia Tenggara?", 
-            target: "Keunggulan strategi dan kelengkapan",
-            keywords: ["strategi", "kelengkapan", "taktik", "keunggulan"] 
-        },
-        { 
-            q: "Bagaimanakah Perang Dunia Kedua di Asia Pasifik berakhir pada Ogos 1945?", 
-            target: "Pengeboman atom di Hiroshima dan Nagasaki",
-            keywords: ["atom", "hiroshima", "nagasaki", "bom"] 
-        }
+        { q: "Apakah matlamat utama Jepun melancarkan dasar peluasan kuasa di rantau Asia Pasifik pada awal abad ke-20?", target: "Memenuhi keperluan ekonomi", keywords: ["ekonomi", "keperluan"] },
+        { q: "Mengapakah Amerika Syarikat mengenakan sekatan ekonomi terhadap Jepun sebelum tercetusnya Perang Dunia Kedua di Asia Pasifik?", target: "Pencerobohan Jepun ke atas China", keywords: ["pencerobohan", "china", "serang china", "menceroboh"] },
+        { q: "Apakah kepentingan serangan Jepun ke atas Pearl Harbor pada Disember 1941?", target: "Melumpuhkan armada laut AS", keywords: ["armada", "laut", "melumpuhkan", "tentera", "as", "amerika"] },
+        { q: "Jepun menggunakan slogan 'Asia untuk Orang Asia' semasa kempen peluasan kuasanya. Apakah tujuan penggunaan slogan tersebut?", target: "Menanam semangat antipenjajah Barat", keywords: ["antipenjajah", "penjajah", "barat", "semangat"] },
+        { q: "Mengapakah Tanah Melayu menjadi sasaran utama dalam serangan Jepun di Asia Tenggara?", target: "Kekayaan sumber bahan mentah", keywords: ["bahan mentah", "sumber", "mentah", "kekayaan"] },
+        { q: "Apakah peranan 'Orde Baru Asia' yang diperkenalkan oleh Jepun?", target: "Membentuk blok ekonomi Asia", keywords: ["blok", "ekonomi"] },
+        { q: "Bagaimanakah kedudukan geografi Jepun mempengaruhi dasar peluasan kuasanya?", target: "Kekurangan sumber asli domestik", keywords: ["kurang", "kekurangan", "sumber"] },
+        { q: "Apakah kesan kegagalan rundingan antara Jepun dengan Amerika Syarikat di Washington pada November 1941?", target: "Jepun melancarkan serangan mengejut", keywords: ["serangan", "mengejut", "menyerang"] },
+        { q: "Apakah faktor yang menyumbang kepada kejayaan awal Jepun dalam menakluki Asia Tenggara?", target: "Keunggulan strategi dan kelengkapan", keywords: ["strategi", "kelengkapan", "taktik", "keunggulan"] },
+        { q: "Bagaimanakah Perang Dunia Kedua di Asia Pasifik berakhir pada Ogos 1945?", target: "Pengeboman atom di Hiroshima dan Nagasaki", keywords: ["atom", "hiroshima", "nagasaki", "bom"] }
     ];
 
     let questions = [];
@@ -189,11 +165,16 @@
     let startTime;
     let timerInterval;
 
+    // Checkpoint Coordinates
     const checkpoints = [
         {x: 50, y: 270}, {x: 120, y: 200}, {x: 200, y: 240}, 
         {x: 280, y: 150}, {x: 360, y: 220}, {x: 440, y: 120}, 
         {x: 520, y: 180}, {x: 600, y: 90},  {x: 670, y: 150}, {x: 720, y: 50}
     ];
+
+    // Smooth movement position
+    let soldierPos = { x: checkpoints[0].x, y: checkpoints[0].y };
+    let targetPos = { x: checkpoints[0].x, y: checkpoints[0].y };
 
     function shuffleArray(array) {
         return array.sort(() => Math.random() - 0.5);
@@ -202,10 +183,12 @@
     function initGame() {
         questions = shuffleArray([...rawQuestions]);
         currentCP = 0;
+        soldierPos = { x: checkpoints[0].x, y: checkpoints[0].y };
+        targetPos = { x: checkpoints[0].x, y: checkpoints[0].y };
         startTime = Date.now();
         timerInterval = setInterval(updateTimer, 100);
         loadQuestion();
-        drawMap();
+        animateMap();
     }
 
     function updateTimer() {
@@ -231,32 +214,98 @@
         if(!userAns) return alert("Sila taip jawapan terlebih dahulu!");
 
         const currentData = questions[currentCP];
-        
-        // Check if student's answer contains at least one required keyword
         const isMatch = currentData.keywords.some(kw => userAns.includes(kw.toLowerCase()));
 
         if (isMatch) {
             currentCP++;
+            targetPos = checkpoints[currentCP] || checkpoints[checkpoints.length - 1];
             loadQuestion();
-            drawMap();
         } else {
-            triggerAmbush();
+            playAmbushCutscene();
         }
     }
 
-    function triggerAmbush() {
+    // ANIMATED CUTSCENE FOR WRONG ANSWER
+    function playAmbushCutscene() {
         const overlay = document.getElementById('ambush-overlay');
+        const canvas = document.getElementById('cutscene-canvas');
+        const ctx = canvas.getContext('2d');
+        
         overlay.style.display = 'flex';
-        setTimeout(() => {
-            overlay.style.display = 'none';
-        }, 1800);
+        overlay.classList.add('gun-flash');
+
+        let frame = 0;
+        const cutsceneInterval = setInterval(() => {
+            frame++;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Jungle Trees background
+            ctx.fillStyle = '#1c2e17';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#0b1409';
+            ctx.fillRect(20, 0, 40, 200);
+            ctx.fillRect(140, 0, 50, 200);
+            ctx.fillRect(300, 0, 45, 200);
+            ctx.fillRect(410, 0, 35, 200);
+
+            // Draw Marching/Falling Soldier
+            let soldierX = 100 + (frame * 4);
+            let soldierY = 130;
+
+            if (frame < 25) {
+                // Marching
+                ctx.fillStyle = '#4a6238';
+                ctx.fillRect(soldierX, soldierY - 30, 20, 30); // Body
+                ctx.fillStyle = '#2b3a24';
+                ctx.fillRect(soldierX + 3, soldierY - 40, 14, 10); // Helmet
+                ctx.fillStyle = '#ffcc99';
+                ctx.fillRect(soldierX + 5, soldierY - 33, 10, 6); // Face
+                
+                // Gun
+                ctx.fillStyle = '#000';
+                ctx.fillRect(soldierX + 15, soldierY - 20, 18, 4);
+            } else if (frame >= 25 && frame < 30) {
+                // Getting Shot (Bullet Hit & Flash)
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(soldierX, soldierY - 30, 20, 30);
+                
+                // Enemy Gunfire Flash
+                ctx.fillStyle = '#ffff00';
+                ctx.beginPath();
+                ctx.arc(soldierX + 60, soldierY - 20, 15, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '16px Courier New';
+                ctx.fillText("BANG!", soldierX + 40, soldierY - 40);
+            } else {
+                // Fallen Soldier
+                ctx.fillStyle = '#4a6238';
+                ctx.fillRect(soldierX, soldierY - 10, 35, 12); // Fallen body
+                ctx.fillStyle = '#2b3a24';
+                ctx.fillRect(soldierX - 10, soldierY - 8, 12, 10); // Fallen Helmet
+            }
+
+            if (frame > 45) {
+                clearInterval(cutsceneInterval);
+                overlay.style.display = 'none';
+                overlay.classList.remove('gun-flash');
+            }
+        }, 50);
     }
 
-    function drawMap() {
+    // Smooth movement loop on main map
+    function animateMap() {
         const canvas = document.getElementById('map-canvas');
         const ctx = canvas.getContext('2d');
+
+        // Smooth Interpolation towards target position
+        soldierPos.x += (targetPos.x - soldierPos.x) * 0.1;
+        soldierPos.y += (targetPos.y - soldierPos.y) * 0.1;
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        // Path
         ctx.beginPath();
         ctx.strokeStyle = '#223019';
         ctx.lineWidth = 12;
@@ -266,6 +315,7 @@
         }
         ctx.stroke();
 
+        // Checkpoints
         checkpoints.forEach((cp, idx) => {
             ctx.fillStyle = idx < currentCP ? '#52b788' : (idx === currentCP ? '#ffb703' : '#6c757d');
             ctx.beginPath();
@@ -277,11 +327,13 @@
             ctx.fillText(`CP${idx+1}`, cp.x - 12, cp.y - 15);
         });
 
-        const playerPos = checkpoints[currentCP] || checkpoints[checkpoints.length - 1];
+        // Soldier Sprite on Map
         ctx.fillStyle = '#d90429';
         ctx.beginPath();
-        ctx.arc(playerPos.x, playerPos.y, 8, 0, Math.PI * 2);
+        ctx.arc(soldierPos.x, soldierPos.y, 8, 0, Math.PI * 2);
         ctx.fill();
+
+        requestAnimationFrame(animateMap);
     }
 
     window.onload = initGame;
