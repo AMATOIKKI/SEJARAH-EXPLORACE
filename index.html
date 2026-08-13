@@ -27,7 +27,6 @@
             box-sizing: border-box;
         }
 
-        /* Top HUD */
         #hud {
             display: flex;
             justify-content: space-between;
@@ -39,7 +38,6 @@
             font-weight: bold;
         }
 
-        /* Canvas Map */
         #map-canvas {
             width: 100%;
             height: 320px;
@@ -49,7 +47,6 @@
             margin-bottom: 15px;
         }
 
-        /* Question Box */
         #question-box {
             background: #1e2918;
             padding: 15px;
@@ -63,7 +60,7 @@
             color: #ffffff;
         }
 
-        input[type="text"] {
+        input[type="text"], input[type="password"] {
             width: 100%;
             padding: 12px;
             background: #141c10;
@@ -91,7 +88,6 @@
             background: #729656;
         }
 
-        /* Config Modal */
         #api-modal {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -110,7 +106,6 @@
             text-align: center;
         }
 
-        /* Ambush Cutscene Overlay */
         #ambush-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -139,7 +134,6 @@
 </head>
 <body>
 
-<!-- API KEY SETUP -->
 <div id="api-modal">
     <div class="modal-content">
         <h3>PERANG DUNIA KEDUA: EXPLORACE</h3>
@@ -149,13 +143,11 @@
     </div>
 </div>
 
-<!-- AMBUSH CUTSCENE -->
 <div id="ambush-overlay">
     <h1 style="font-size: 3rem; text-shadow: 3px 3px #000;">SERANGAN HENDAP!</h1>
     <p style="font-size: 1.5rem;">Jawapan Kurang Tepat. Sila Cuba Lagi!</p>
 </div>
 
-<!-- GAME CONTAINER -->
 <div id="game-container">
     <div id="hud">
         <span>CHECKPOINT: <span id="cp-count">1</span>/10</span>
@@ -173,7 +165,6 @@
 </div>
 
 <script>
-    // 10 Questions and Target Answers
     const rawQuestions = [
         { q: "Apakah matlamat utama Jepun melancarkan dasar peluasan kuasa di rantau Asia Pasifik pada awal abad ke-20?", a: "Memenuhi keperluan ekonomi" },
         { q: "Mengapakah Amerika Syarikat mengenakan sekatan ekonomi terhadap Jepun sebelum tercetusnya Perang Dunia Kedua di Asia Pasifik?", a: "Pencerobohan Jepun ke atas China" },
@@ -193,7 +184,6 @@
     let startTime;
     let timerInterval;
 
-    // Map Checkpoints Grid Coordinates (10 Checkpoints)
     const checkpoints = [
         {x: 50, y: 270}, {x: 120, y: 200}, {x: 200, y: 240}, 
         {x: 280, y: 150}, {x: 360, y: 220}, {x: 440, y: 120}, 
@@ -251,16 +241,15 @@
         const targetAns = questions[currentCP].a;
         const currentQ = questions[currentCP].q;
 
-        const promptText = `You are an automated grading system for a Malaysian History (Sejarah SPM) quiz.
-Question: "${currentQ}"
-Reference Answer: "${targetAns}"
-Student's Answer: "${userAns}"
+        const promptText = `Adakah jawapan murid ini betul berdasarkan skema jawapan?
+Soalan: "${currentQ}"
+Skema Jawapan: "${targetAns}"
+Jawapan Murid: "${userAns}"
 
-Determine if the student's answer is historically accurate and carries the same core meaning/concept as the reference answer.
-Reply ONLY with a JSON object: {"isCorrect": true} or {"isCorrect": false}. Do not include markdown or extra text.`;
+Jawab "YA" jika maksudnya sama/tepat, atau "TIDAK" jika salah. Jawab dengan satu perkataan sahaja.`;
 
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -269,11 +258,15 @@ Reply ONLY with a JSON object: {"isCorrect": true} or {"isCorrect": false}. Do n
             });
 
             const data = await response.json();
-            const textResp = data.candidates[0].content.parts[0].text.trim();
-            const cleanJson = textResp.replace(/```json|```/g, '');
-            const result = JSON.parse(cleanJson);
+            
+            if (data.error) {
+                alert("Error: " + data.error.message);
+                return;
+            }
 
-            if(result.isCorrect) {
+            const textResp = data.candidates[0].content.parts[0].text.trim().toUpperCase();
+
+            if (textResp.includes("YA")) {
                 currentCP++;
                 loadQuestion();
                 drawMap();
@@ -302,7 +295,6 @@ Reply ONLY with a JSON object: {"isCorrect": true} or {"isCorrect": false}. Do n
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Draw Path
         ctx.beginPath();
         ctx.strokeStyle = '#223019';
         ctx.lineWidth = 12;
@@ -312,7 +304,6 @@ Reply ONLY with a JSON object: {"isCorrect": true} or {"isCorrect": false}. Do n
         }
         ctx.stroke();
 
-        // Draw Checkpoint Flags
         checkpoints.forEach((cp, idx) => {
             ctx.fillStyle = idx < currentCP ? '#52b788' : (idx === currentCP ? '#ffb703' : '#6c757d');
             ctx.beginPath();
@@ -324,7 +315,6 @@ Reply ONLY with a JSON object: {"isCorrect": true} or {"isCorrect": false}. Do n
             ctx.fillText(`CP${idx+1}`, cp.x - 12, cp.y - 15);
         });
 
-        // Draw Soldier Avatar at Current CP
         const playerPos = checkpoints[currentCP] || checkpoints[checkpoints.length - 1];
         ctx.fillStyle = '#d90429';
         ctx.beginPath();
@@ -334,4 +324,3 @@ Reply ONLY with a JSON object: {"isCorrect": true} or {"isCorrect": false}. Do n
 </script>
 </body>
 </html>
-
