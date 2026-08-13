@@ -105,13 +105,6 @@
             0% { background: rgba(180, 0, 0, 0.85); }
             100% { background: rgba(80, 0, 0, 0.95); }
         }
-
-        #loader {
-            display: none;
-            color: #d4e09b;
-            font-style: italic;
-            margin-top: 5px;
-        }
     </style>
 </head>
 <body>
@@ -133,27 +126,63 @@
         <div id="question-text">Memuatkan soalan...</div>
         <input type="text" id="user-answer" placeholder="Taip jawapan anda di sini..." autocomplete="off">
         <button id="submit-btn" onclick="checkAnswer()">Hantar Jawapan</button>
-        <div id="loader">Gemini AI sedang menyemak jawapan anda...</div>
     </div>
 </div>
 
 <script>
-    // 10 Sejarah Questions & Scheme Answers
+    // 10 Sejarah Questions with keyword triggers
     const rawQuestions = [
-        { q: "Apakah matlamat utama Jepun melancarkan dasar peluasan kuasa di rantau Asia Pasifik pada awal abad ke-20?", a: "Memenuhi keperluan ekonomi" },
-        { q: "Mengapakah Amerika Syarikat mengenakan sekatan ekonomi terhadap Jepun sebelum tercetusnya Perang Dunia Kedua di Asia Pasifik?", a: "Pencerobohan Jepun ke atas China" },
-        { q: "Apakah kepentingan serangan Jepun ke atas Pearl Harbor pada Disember 1941?", a: "Melumpuhkan armada laut AS" },
-        { q: "Jepun menggunakan slogan 'Asia untuk Orang Asia' semasa kempen peluasan kuasanya. Apakah tujuan penggunaan slogan tersebut?", a: "Menanam semangat antipenjajah Barat" },
-        { q: "Mengapakah Tanah Melayu menjadi sasaran utama dalam serangan Jepun di Asia Tenggara?", a: "Kekayaan sumber bahan mentah" },
-        { q: "Apakah peranan 'Orde Baru Asia' yang diperkenalkan oleh Jepun?", a: "Membentuk blok ekonomi Asia" },
-        { q: "Bagaimanakah kedudukan geografi Jepun mempengaruhi dasar peluasan kuasanya?", a: "Kekurangan sumber asli domestik" },
-        { q: "Apakah kesan kegagalan rundingan antara Jepun dengan Amerika Syarikat di Washington pada November 1941?", a: "Jepun melancarkan serangan mengejut" },
-        { q: "Apakah faktor yang menyumbang kepada kejayaan awal Jepun dalam menakluki Asia Tenggara?", a: "Keunggulan strategi dan kelengkapan" },
-        { q: "Bagaimanakah Perang Dunia Kedua di Asia Pasifik berakhir pada Ogos 1945?", a: "Pengeboman atom di Hiroshima dan Nagasaki" }
+        { 
+            q: "Apakah matlamat utama Jepun melancarkan dasar peluasan kuasa di rantau Asia Pasifik pada awal abad ke-20?", 
+            target: "Memenuhi keperluan ekonomi",
+            keywords: ["ekonomi", "keperluan"] 
+        },
+        { 
+            q: "Mengapakah Amerika Syarikat mengenakan sekatan ekonomi terhadap Jepun sebelum tercetusnya Perang Dunia Kedua di Asia Pasifik?", 
+            target: "Pencerobohan Jepun ke atas China",
+            keywords: ["pencerobohan", "china", "serang china", "menceroboh"] 
+        },
+        { 
+            q: "Apakah kepentingan serangan Jepun ke atas Pearl Harbor pada Disember 1941?", 
+            target: "Melumpuhkan armada laut AS",
+            keywords: ["armada", "laut", "melumpuhkan", "tentera", "as", "amerika"] 
+        },
+        { 
+            q: "Jepun menggunakan slogan 'Asia untuk Orang Asia' semasa kempen peluasan kuasanya. Apakah tujuan penggunaan slogan tersebut?", 
+            target: "Menanam semangat antipenjajah Barat",
+            keywords: ["antipenjajah", "penjajah", "barat", "semangat"] 
+        },
+        { 
+            q: "Mengapakah Tanah Melayu menjadi sasaran utama dalam serangan Jepun di Asia Tenggara?", 
+            target: "Kekayaan sumber bahan mentah",
+            keywords: ["bahan mentah", "sumber", "mentah", "kekayaan"] 
+        },
+        { 
+            q: "Apakah peranan 'Orde Baru Asia' yang diperkenalkan oleh Jepun?", 
+            target: "Membentuk blok ekonomi Asia",
+            keywords: ["blok", "ekonomi"] 
+        },
+        { 
+            q: "Bagaimanakah kedudukan geografi Jepun mempengaruhi dasar peluasan kuasanya?", 
+            target: "Kekurangan sumber asli domestik",
+            keywords: ["kurang", "kekurangan", "sumber"] 
+        },
+        { 
+            q: "Apakah kesan kegagalan rundingan antara Jepun dengan Amerika Syarikat di Washington pada November 1941?", 
+            target: "Jepun melancarkan serangan mengejut",
+            keywords: ["serangan", "mengejut", "menyerang"] 
+        },
+        { 
+            q: "Apakah faktor yang menyumbang kepada kejayaan awal Jepun dalam menakluki Asia Tenggara?", 
+            target: "Keunggulan strategi dan kelengkapan",
+            keywords: ["strategi", "kelengkapan", "taktik", "keunggulan"] 
+        },
+        { 
+            q: "Bagaimanakah Perang Dunia Kedua di Asia Pasifik berakhir pada Ogos 1945?", 
+            target: "Pengeboman atom di Hiroshima dan Nagasaki",
+            keywords: ["atom", "hiroshima", "nagasaki", "bom"] 
+        }
     ];
-
-    // BAKE YOUR API KEY HERE:
-    const GEMINI_API_KEY = "AQ.Ab8RN6JZnIDQngPUIn-xSnkCaPYUcd3hEphOfx_6ZikMeGLFvw"; 
 
     let questions = [];
     let currentCP = 0;
@@ -197,56 +226,21 @@
         document.getElementById('user-answer').value = '';
     }
 
-    async function checkAnswer() {
-        const userAns = document.getElementById('user-answer').value.trim();
+    function checkAnswer() {
+        const userAns = document.getElementById('user-answer').value.trim().toLowerCase();
         if(!userAns) return alert("Sila taip jawapan terlebih dahulu!");
 
-        const btn = document.getElementById('submit-btn');
-        const loader = document.getElementById('loader');
-        btn.disabled = true;
-        loader.style.display = 'block';
+        const currentData = questions[currentCP];
+        
+        // Check if student's answer contains at least one required keyword
+        const isMatch = currentData.keywords.some(kw => userAns.includes(kw.toLowerCase()));
 
-        const targetAns = questions[currentCP].a;
-        const currentQ = questions[currentCP].q;
-
-        const promptText = `Adakah jawapan murid ini betul berdasarkan skema jawapan Sejarah SPM?
-Soalan: "${currentQ}"
-Skema Jawapan: "${targetAns}"
-Jawapan Murid: "${userAns}"
-
-Jawab "YA" jika maksudnya secara sejarah adalah betul/relevan, atau "TIDAK" jika salah. Jawab dengan satu perkataan sahaja.`;
-
-        try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: promptText }] }]
-                })
-            });
-
-            const data = await response.json();
-            
-            if (data.error) {
-                alert("Error AI: " + data.error.message);
-                return;
-            }
-
-            const textResp = data.candidates[0].content.parts[0].text.trim().toUpperCase();
-
-            if (textResp.includes("YA")) {
-                currentCP++;
-                loadQuestion();
-                drawMap();
-            } else {
-                triggerAmbush();
-            }
-        } catch(err) {
-            alert("Ralat sambungan AI. Sila cuba lagi.");
-            console.error(err);
-        } finally {
-            btn.disabled = false;
-            loader.style.display = 'none';
+        if (isMatch) {
+            currentCP++;
+            loadQuestion();
+            drawMap();
+        } else {
+            triggerAmbush();
         }
     }
 
